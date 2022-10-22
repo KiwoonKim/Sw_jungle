@@ -1,6 +1,11 @@
 #include "rbtree.h"
 
 #include <stdlib.h>
+void delete_tree_nodes(node_t *n);
+void rbtree_insert_fixup(rbtree *t, node_t *x);
+void left_rotate(rbtree *t, node_t *x);
+void right_rotate(rbtree *t, node_t *x);
+
 rbtree *new_rbtree(void) {
   rbtree *p = (rbtree *)calloc(1, sizeof(rbtree));
   p->nil = (node_t *)calloc(1, sizeof(node_t));
@@ -25,7 +30,72 @@ void delete_rbtree(rbtree *t) {
 	delete_tree_nodes(t->root);
   free(t);
 }
-
+void rbtree_insert_fixup(rbtree *t, node_t *new){
+	node_t *y;
+	while (new->parent->color == 0){
+		if (new->parent == new->parent->parent->left){
+			y = new->parent->parent->right;
+			if (y->color == 0){
+				new->parent->color = 1;
+				y->color = 1;
+				new->parent->parent->color = 0;
+				new = new->parent->parent;
+			}
+			else if (new == new->parent->right){
+				new = new->parent;
+				left_rotate(t, new);
+			}
+			new->parent->color = 1;
+			new->parent->parent->color = 0;
+			right_rotate(t, new->parent->parent);
+		}
+		else{
+			y = new->parent->parent->left;
+			if (y->color == 0){
+				new->parent->color = 1;
+				y->color = 1;
+				new->parent->parent->color = 0;
+				new = new->parent->parent;
+			}
+			else if (new == new->parent->left){
+				new = new->parent;
+				right_rotate(t, new);
+			}
+			new->parent->color = 1;
+			new->parent->parent->color = 0;
+			left_rotate(t, new->parent->parent);
+		}
+	}
+	t->root->color = 1;
+}
+void left_rotate(rbtree  *t, node_t *n){
+	node_t *y = n->right;
+	n->right = y->left;
+	if (y->left != t->nil) {
+		y->left->parent = n;
+	}
+	y->parent = n->parent;
+	if (n->parent == t->nil) {
+		t->root = y;
+	}
+	else if (n == n->parent->left) {
+			
+	}
+}
+void right_rotate(rbtree *t, node_t *n) {
+	node_t *y = n->left;
+	n->left = y -> right;
+	if (y->right != t->nil) {
+		y->left->parent = n;
+	}
+	y->parent = n->parent;
+	if (n->parent == t->nil) {
+		t->root = y;
+	}
+	else if (n== n->parent->left){
+		
+	}
+}
 node_t *rbtree_insert(rbtree *t, const key_t key) {
   // TODO: implement insert
 	node_t *p = t -> root;
@@ -58,34 +128,6 @@ node_t *rbtree_insert(rbtree *t, const key_t key) {
   return t->root;
 }
 
-void left_rotate(rbtree  *t, node_t *n){
-	node_t *y = n->right;
-	n->right = y->left;
-	if (y->left != t->nil) {
-		y->left->parent = n;
-	}
-	y->parent = n->parent;
-	if (n->parent == t->nil) {
-		t->root = y;
-	}
-	else if (n == n->parent->left) {
-			
-	}
-}
-void right_rotate(rbtree *t, node_t *n) {
-	node_t *y = n->left;
-	n->left = y -> right;
-	if (y->right != t->nil) {
-		y->left->parent = n;
-	}
-	y->parent = n->parent;
-	if (n->parent == t->nil) {
-		t->root = y;
-	}
-	else if (n== n->parent->left){
-		
-	}
-}
 node_t *rbtree_find(const rbtree *t, const key_t key) {
   // TODO: implement find
   return t->root;
