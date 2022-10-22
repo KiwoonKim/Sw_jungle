@@ -114,6 +114,20 @@ void left_rotate(rbtree  *t, node_t *n){
 			
 	}
 }
+void right_rotate(rbtree *t, node_t *n) {
+	node_t *y = n->left;
+	n->left = y -> right;
+	if (y->right != t->nil) {
+		y->left->parent = n;
+	}
+	y->parent = n->parent;
+	if (n->parent == t->nil) {
+		t->root = y;
+	}
+	else if (n== n->parent->left){
+		
+	}
+}
 node_t *rbtree_find(const rbtree *t, const key_t key) {
   // TODO: implement find
   return t->root;
