@@ -1,6 +1,7 @@
 #include "rbtree.h"
 
 #include <stdlib.h>
+#define SENTINEL nil
 void delete_tree_nodes(node_t *n);
 void rbtree_insert_fixup(rbtree *t, node_t *x);
 void left_rotate(rbtree *t, node_t *x);
@@ -29,6 +30,34 @@ void delete_rbtree(rbtree *t) {
   // TODO: reclaim the tree nodes's memory
 	delete_tree_nodes(t->root);
   free(t);
+}
+void left_rotate(rbtree  *t, node_t *n){
+	node_t *y = n->right;
+	n->right = y->left;
+	if (y->left != t->nil) {
+		y->left->parent = n;
+	}
+	y->parent = n->parent;
+	if (n->parent == t->nil) {
+		t->root = y;
+	}
+	else if (n == n->parent->left) {
+			
+	}
+}
+void right_rotate(rbtree *t, node_t *n) {
+	node_t *y = n->left;
+	n->left = y -> right;
+	if (y->right != t->nil) {
+		y->left->parent = n;
+	}
+	y->parent = n->parent;
+	if (n->parent == t->nil) {
+		t->root = y;
+	}
+	else if (n== n->parent->left){
+		
+	}
 }
 void rbtree_insert_fixup(rbtree *t, node_t *new){
 	node_t *y;
@@ -68,34 +97,7 @@ void rbtree_insert_fixup(rbtree *t, node_t *new){
 	}
 	t->root->color = 1;
 }
-void left_rotate(rbtree  *t, node_t *n){
-	node_t *y = n->right;
-	n->right = y->left;
-	if (y->left != t->nil) {
-		y->left->parent = n;
-	}
-	y->parent = n->parent;
-	if (n->parent == t->nil) {
-		t->root = y;
-	}
-	else if (n == n->parent->left) {
-			
-	}
-}
-void right_rotate(rbtree *t, node_t *n) {
-	node_t *y = n->left;
-	n->left = y -> right;
-	if (y->right != t->nil) {
-		y->left->parent = n;
-	}
-	y->parent = n->parent;
-	if (n->parent == t->nil) {
-		t->root = y;
-	}
-	else if (n== n->parent->left){
-		
-	}
-}
+
 node_t *rbtree_insert(rbtree *t, const key_t key) {
   // TODO: implement insert
 	node_t *p = t -> root;
