@@ -9,9 +9,16 @@ void right_rotate(rbtree *t, node_t *x);
 
 rbtree *new_rbtree(void) {
   rbtree *p = (rbtree *)calloc(1, sizeof(rbtree));
-  p->nil = (node_t *)calloc(1, sizeof(node_t));
-  p->nil->color = 1;
-  p->root = p->nil;
+  p->root = NULL
+  node_t *n = (node_t *)calloc(1, sizeof(node_t));
+  if (n != NULL){
+	n->color = 1;
+	p->nil = n;
+	printf("success");
+  }
+  else {
+	printf("fail");
+  }
   // TODO: initialize struct if needed
   return p;
 }
