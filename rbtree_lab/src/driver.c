@@ -36,18 +36,24 @@ void test_insert_single(const key_t key) {
   assert(p->right == NULL);
   assert(p->parent == NULL);
 #endif
-  delete_rbtree(t);
+  // delete_rbtree(t);
   printf("0");
 }
 
 int main(int argc, char *argv[])
 {
-    test_init();
-    test_insert_single(1000);
-    // rbtree *t = new_rbtree();
-    // node_t *p = rbtree_insert(t, 1000);
-    // node_t *s = rbtree_insert(t, 2000);
-    // printf("%d\n", p->key);
-    // printf("%d\n", s->right->key);
-    // printf("%d", s->right->color);
+    // test_init();
+    // test_insert_single(1000);
+    // rbtree_find(1000);
+    rbtree *t = new_rbtree();
+    rbtree_insert(t, 1000);
+    rbtree_insert(t, 2000);
+    rbtree_insert(t, 3000);
+    node_t *s = rbtree_max(t);
+    printf("%d\n", t->root->key);
+    printf("%d\n", t->root->left->key);
+    printf("%d\n", t->root->right->key);
+    printf("%d\n", s->key);
+    delete_rbtree(t);
+    // printf("%d", s->key);
 }

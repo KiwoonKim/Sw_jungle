@@ -1,36 +1,39 @@
 #include "rbtree.h"
+#include <stdio.h>
 #include <stdlib.h>
 #define SENTINEL TRUE
 
 rbtree *new_rbtree(void) {
-  rbtree *p = (rbtree *)malloc(sizeof(rbtree)* 1);
-  p->nil = (node_t *)malloc(sizeof(node_t) * 1);
-  p->root = p->nil;
-  if (p->nil != NULL){
+	rbtree *p = (rbtree *)calloc(1, sizeof(rbtree));
+	if (p == NULL) return NULL;
+	p->nil = (node_t *)calloc(1, sizeof(node_t));
+	if (p->nil == NULL) return NULL;
+	p->root = p->nil;
 	p->nil->color = RBTREE_BLACK;
-  }
   // TODO: initialize struct if needed
-  return p;
+	return p;
 }
 
-void delete_tree_nodes(node_t *n){
-if (n != NULL){
-	delete_tree_nodes(n->left);
-	delete_tree_nodes(n->right);
-	free(n);
+void delete_tree_nodes(rbtree *t, node_t *n){
+	if (n == NULL) {		
+		return ;	
 	}
-	return ;
+	if (n->left != t->nil) delete_tree_nodes(t, n->left);
+	if (n->right != t->nil) delete_tree_nodes(t, n->right);
+	n -> left = NULL;
+	n -> right = NULL;
+	free(n);
 }
 
 void delete_rbtree(rbtree *t) {
   // TODO: reclaim the tree nodes's memory
-  if (t != NULL) {
-	delete_tree_nodes(t->root);
-	free(t);
-	if (t) printf("still");
-	else printf("die");
+  if (t == NULL) {
+	return ;
   }
-  return ;
+	delete_tree_nodes(t, t->root);
+	free(t->nil);
+	t->nil = NULL;
+	free(t);
 }
 
 void left_rotate(rbtree  *t, node_t *n){
@@ -73,7 +76,7 @@ void right_rotate(rbtree *t, node_t *n) {
 }
 
 void rbtree_insert_fixup(rbtree *t, node_t *new){
-	node_t *y;
+	node_t *y = NULL;
 	while (new->parent->color == RBTREE_RED){
 		if (new->parent == new->parent->parent->left){
 			y = new->parent->parent->right;
@@ -116,51 +119,181 @@ node_t *rbtree_insert(rbtree *t, const key_t key) {
 	node_t *p = t -> root;
 	node_t *c = t -> nil;
 	node_t *new = (node_t *)calloc(1, sizeof(node_t));
-	new->key = key;
+	if (new == NULL) {exit(1); return NULL;}
 	while (p != NULL && (p != t->nil)){
 		c = p;
-		if (p->key < key) p = p->left;
-		else p = p->right;
+		if (p->key < key) p = p->right;
+		else p = p->left;
 	}
 	new->parent = c;
 	if (c == t->nil){
 		t->root = new;
 	}
-	else if (key < c->key)
-	{
-		c->left = new;
-	}
-	else{
-		c->right = new;
-	}
+	else if (key < c->key) c->left = new;
+	else c->right = new;
 	new->right = t->nil;
 	new->left = t->nil;
+	new->key = key;
 	new->color = RBTREE_RED;
 	rbtree_insert_fixup(t, new);
   return t->root;
 }
 
 node_t *rbtree_find(const rbtree *t, const key_t key) {
+	node_t *ret;
+	ret = t->root;
+	while (ret -> key != key && ret != t->nil){
+		if (ret -> key > key) {
+			ret = ret -> left;
+		}
+		else ret = ret -> right;
+	}
+	if (ret == t->nil) return NULL;
   // TODO: implement find
-  return t->root;
+  return ret;
 }
 
 node_t *rbtree_min(const rbtree *t) {
+	node_t *ret = t -> root;
+	while (ret -> left != t -> nil)
+	{
+		ret = ret -> left;
+	}
   // TODO: implement find
-  return t->root;
+  return ret;
 }
 
 node_t *rbtree_max(const rbtree *t) {
+	node_t *ret = t -> root;
+	while (ret -> right != t-> nil){
+		ret = ret -> right;
+	}
   // TODO: implement find
-  return t->root;
+  return ret;
+}
+node_t *rbtree_sub_min(const rbtree *t, node_t* x) {
+	node_t *ret = x;
+	while (ret -> left != t -> nil)
+	{
+		ret = ret -> left;
+	}
+  // TODO: implement find
+  return ret;
+}
+void rb_transplant(rbtree *t, node_t *u, node_t *v){
+	if (u->parent == t->nil){
+		t->root = v;
+	}
+	else if (u == u->parent->left){
+		u->parent->left = v;
+	}
+	else {
+		u->parent->right = v;
+	}
+	v->parent = u->parent;
+}
+
+void rb_delete_fixup(rbtree *t, node_t  *n){
+	node_t *w = n->parent->right;
+	while (n != t->root && n->color == RBTREE_BLACK)
+	{
+		
+		if (n == n->parent->left){ // n이 왼쪽에서 왔을 경우
+			w = n->parent->right; 	// n의 형제 노드로 시작
+			if (w->color == RBTREE_RED){	// 그 색이 빨강이면
+				w->color = RBTREE_BLACK;	// 검정으로 만들고 
+				n->parent->color = RBTREE_RED;	//부모를 빩으로 바꾼뒤
+				left_rotate(t, n->parent);	// 왼쪽 회전
+				w = n->parent;				// w를 부모로 바꿈 회전 전에는 w의 왼쪽 자식이였음
+			}
+			if (w->left->color == RBTREE_BLACK && w->right->color == RBTREE_BLACK){
+				w->color = RBTREE_RED;
+				n = n->parent;
+			}
+			else if (w->right->color == RBTREE_BLACK) {	// 새로운 w의 왼쪽이 빨강이면
+				w->left->color = RBTREE_BLACK;
+				w->color = RBTREE_RED;
+				right_rotate(t, w);
+				w = n->parent->right;
+			}
+			n->parent->color = RBTREE_BLACK;
+			w->right->color = RBTREE_BLACK;
+			left_rotate(t, n->parent);
+			// n = t->root;
+		}
+		else{ // n이 오른쪽에서 온경우
+			w = n->parent->left;
+			if (w->color == RBTREE_RED){
+				w->color = RBTREE_BLACK;
+				w->parent->color = RBTREE_RED;
+				right_rotate(t, n->parent);
+				w = n->parent; 
+			}
+			if (w->left->color == RBTREE_BLACK && w->right->color == RBTREE_BLACK){
+				w->color =RBTREE_RED;
+				n = n->parent;
+			}
+			else if (w->left->color == RBTREE_BLACK){
+				w->right->color = RBTREE_BLACK;
+				w->color = RBTREE_RED;
+				left_rotate(t, w);
+				w = n->parent->left;
+			}
+			w->color = n->parent->color;
+			w->parent->color = RBTREE_BLACK;
+			w->left->color = RBTREE_BLACK;
+			right_rotate(t, n->parent);
+			// n = t->root;
+		}
+		n = t->root;
+	}
+	n->color = RBTREE_BLACK;
 }
 
 int rbtree_erase(rbtree *t, node_t *p) {
   // TODO: implement erase
-return 0;
+	node_t *y = p;
+	node_t *x = NULL;
+	color_t y_origin_c = y->color;
+	// 삭제노드가 말단 노드인 경우와 그렇지 않은 경우.
+	if (p->left == t->nil) {
+		x = p->right;
+		rb_transplant(t, p, x); // p의 오른쪽에 있는 녀석을 p의 자리로 옮겨 심기
+	}
+	else if(p->right == t->nil) {
+		x = p->left;
+		rb_transplant(t, p, x);
+	}
+	else {
+		y = rbtree_sub_min(t,p->right);
+		y_origin_c = y->color;
+		if (y->parent == p){
+			x->parent = y;
+		}
+		else{
+			rb_transplant(t, y, y->parent);
+		}
+		y->left = p->left;
+		y->left->parent = y;
+		y->color = p->color;
+	}
+	if (y_origin_c == RBTREE_BLACK) rb_delete_fixup(t, x);
+	free(p);
+	return 0;
+}
+
+void put_num(node_t *nd, key_t *arr, const size_t n, int *i)
+{
+	put_num(nd->left, arr, n, i);
+	if (*i < n) {
+		*(arr + *i) = nd->key;
+		*i += 1;
+	}
+	put_num(nd->right, arr, n, i);
 }
 
 int rbtree_to_array(const rbtree *t, key_t *arr, const size_t n) {
-  // TOD O: implement to_array
+	int i = 0;
+	put_num(t->root, arr, n, &i);  // TOD O: implement to_array
   return 0;
 }
