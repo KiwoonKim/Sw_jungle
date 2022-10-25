@@ -17,18 +17,20 @@ void delete_tree_nodes(rbtree *t, node_t *n){
 	if (n == t->nil) {		
 		return ;	
 	}
-	delete_tree_nodes(t, n->left);
-	delete_tree_nodes(t, n->right);
+	if(n->left != t->nil) delete_tree_nodes(t, n->left);
+	if(n->right != t->nil) delete_tree_nodes(t, n->right);
 	free(n);
+	n = NULL;
 }
 
 void delete_rbtree(rbtree *t) {
   // TODO: reclaim the tree nodes's memory
-  if (t == NULL || t->root == t->nil) {
-	return ;
-  }
+  if (t == NULL) return ;
+  if (t->root != t->nil){
 	delete_tree_nodes(t, t->root);
+  }
 	free(t->nil);
+	t->nil = NULL;
 	free(t);
 }
 
@@ -194,17 +196,16 @@ void rb_transplant(rbtree *t, node_t *u, node_t *v){
 }
 
 void rb_erase_fixup(rbtree *t, node_t  *n){
-	node_t *w = n->parent->right;
 	while (n != t->root && n->color == RBTREE_BLACK)
 	{
 		
 		if (n == n->parent->left){ // n이 왼쪽에서 왔을 경우
-			w = n->parent->right; 	// n의 형제 노드로 시작
+			node_t *w = n->parent->right; 	// n의 형제 노드로 시작
 			if (w->color == RBTREE_RED){	// 그 색이 빨강이면
 				w->color = RBTREE_BLACK;	// 검정으로 만들고 
 				n->parent->color = RBTREE_RED;	//부모를 빩으로 바꾼뒤
 				left_rotate(t, n->parent);	// 왼쪽 회전
-				w = n->parent;				// w를 부모로 바꿈 회전 전에는 w의 왼쪽 자식이였음
+				w = n->parent->right;				// w를 부모로 바꿈 회전 전에는 w의 왼쪽 자식이였음
 			}
 			if (w->left->color == RBTREE_BLACK && w->right->color == RBTREE_BLACK){
 				w->color = RBTREE_RED;
@@ -225,14 +226,14 @@ void rb_erase_fixup(rbtree *t, node_t  *n){
 			}
 		}
 		else{ // n이 오른쪽에서 온경우
-			w = n->parent->left;
+			node_t *w = n->parent->left;
 			if (w->color == RBTREE_RED){
 				w->color = RBTREE_BLACK;
 				w->parent->color = RBTREE_RED;
 				right_rotate(t, n->parent);
-				w = n->parent; 
+				w = n->parent->left; 
 			}
-			if (w->left->color == RBTREE_BLACK && w->right->color == RBTREE_BLACK){
+			if (w->right->color == RBTREE_BLACK && w->left->color == RBTREE_BLACK){
 				w->color =RBTREE_RED;
 				n = n->parent;
 			}
@@ -262,21 +263,25 @@ int rbtree_erase(rbtree *t, node_t *p) {
 	// 삭제노드가 말단 노드인 경우와 그렇지 않은 경우.
 	if (p->left == t->nil) {
 		x = p->right;
-		rb_transplant(t, p, x); // p의 오른쪽에 있는 녀석을 p의 자리로 옮겨 심기
+		rb_transplant(t, p, p->right); // p의 오른쪽에 있는 녀석을 p의 자리로 옮겨 심기
 	}
 	else if(p->right == t->nil) {
 		x = p->left;
-		rb_transplant(t, p, x);
+		rb_transplant(t, p, p->left);
 	}
 	else {
-		y = rbtree_sub_min(t,p->right);
+		y = y->right;
+		while (y->left != t->nil)
+		{
+				y = y->left;
+		}
 		y_origin_c = y->color;
 		x = y->right;
 		if (y->parent == p){
 			x->parent = y;
 		}
 		else{
-			rb_transplant(t, y, y->parent);
+			rb_transplant(t, y, y->right);
 			y->right = p->right;
 			y->right->parent = y;
 		}
@@ -290,19 +295,19 @@ int rbtree_erase(rbtree *t, node_t *p) {
 	return 0;
 }
 
-void put_num(node_t *nd, key_t *arr, const size_t n, int *i)
+void put_num(const rbtree *t, node_t *nd, key_t *arr, const size_t n, int *i)
 {
 	if (n == *i) return ;
-	put_num(nd->left, arr, n, i);
+    if (nd->left != t->nil) put_num(t, nd->left, arr, n, i);
 	if (*i < n) {
 		*(arr + *i) = nd->key;
 		*i += 1;
 	}
-	put_num(nd->right, arr, n, i);
+	if (nd->right != t->nil) put_num(t, nd->right, arr, n, i);
 }
 
 int rbtree_to_array(const rbtree *t, key_t *arr, const size_t n) {
 	int i = 0;
-	put_num(t->root, arr, n, &i);  // TOD O: implement to_array
+	put_num(t, t->root, arr, n, &i);  // TOD O: implement to_array
   return 0;
 }
