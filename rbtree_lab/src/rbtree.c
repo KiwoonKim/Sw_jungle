@@ -292,6 +292,7 @@ int rbtree_erase(rbtree *t, node_t *p) {
 
 void put_num(node_t *nd, key_t *arr, const size_t n, int *i)
 {
+	if (n == *i) return ;
 	put_num(nd->left, arr, n, i);
 	if (*i < n) {
 		*(arr + *i) = nd->key;
