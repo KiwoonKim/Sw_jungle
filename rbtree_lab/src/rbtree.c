@@ -17,10 +17,11 @@ void delete_tree_nodes(rbtree *t, node_t *n){
 	if (n == t->nil) {		
 		return ;	
 	}
-	if(n->left != t->nil) delete_tree_nodes(t, n->left);
-	if(n->right != t->nil) delete_tree_nodes(t, n->right);
+	delete_tree_nodes(t, n->left);
+	n->left = NULL;
+	delete_tree_nodes(t, n->right);
+	n->right = NULL;
 	free(n);
-	n = NULL;
 }
 
 void delete_rbtree(rbtree *t) {
@@ -32,6 +33,7 @@ void delete_rbtree(rbtree *t) {
 	free(t->nil);
 	t->nil = NULL;
 	free(t);
+	// 여기서 t = NULL 해도 반영 안됨.
 }
 
 void left_rotate(rbtree  *t, node_t *n){
@@ -294,10 +296,10 @@ int rbtree_erase(rbtree *t, node_t *p) {
 	free(p);
 	return 0;
 }
-
+/*
 void put_num(const rbtree *t, node_t *nd, key_t *arr, const size_t n, int *i)
 {
-	if (n == *i) return ;
+	if (n == *i || nd == t->nil) return ;
     if (nd->left != t->nil) put_num(t, nd->left, arr, n, i);
 	if (*i < n) {
 		*(arr + *i) = nd->key;
@@ -305,9 +307,17 @@ void put_num(const rbtree *t, node_t *nd, key_t *arr, const size_t n, int *i)
 	}
 	if (nd->right != t->nil) put_num(t, nd->right, arr, n, i);
 }
-
+*/
+int put_num2(const rbtree *t, node_t *nd, key_t *arr, const size_t n, int i)
+{
+		if (!(i < n) || nd == t->nil) return i;
+		i = put_num2(t, nd->left, arr, n, i);
+		if (i < n) arr[i++] = nd->key;
+		i = put_num2(t, nd->right, arr, n, i);
+		return i;
+}
 int rbtree_to_array(const rbtree *t, key_t *arr, const size_t n) {
 	int i = 0;
-	put_num(t, t->root, arr, n, &i);  // TOD O: implement to_array
+	put_num2(t, t->root, arr, n, i);  // TOD O: implement to_array
   return 0;
 }
